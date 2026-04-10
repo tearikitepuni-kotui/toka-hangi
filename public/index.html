@@ -548,6 +548,11 @@
     <div class="game-bg-fallback"></div>
   </div>
 
+  <!-- Hangi background image (non-holders) -->
+  <div id="hangi-bg-img" style="display:none;position:fixed;inset:0;z-index:4;">
+    <img src="/assets/hangi-bg.png" style="width:100%;height:100%;object-fit:cover;"/>
+  </div>
+
   <!-- Rock video (holders only) -->
   <div class="rock-video-wrap" id="rock-video-wrap" style="display:none;">
     <video id="rock-video" autoplay loop muted playsinline>
@@ -684,11 +689,17 @@ function initSocket() {
     if (STATE.isHolder) {
       document.getElementById('answer-buttons').style.display = 'flex';
       document.getElementById('watching-msg').style.display = 'none';
+      document.getElementById('hangi-bg-img').style.display = 'none';
+      // Reset and play video from beginning
+      const vid = document.getElementById('rock-video');
+      vid.currentTime = 0;
+      vid.play();
       document.getElementById('rock-video-wrap').style.display = 'flex';
     } else {
       document.getElementById('answer-buttons').style.display = 'none';
-      document.getElementById('watching-msg').style.display = 'block';
+      document.getElementById('watching-msg').style.display = 'none';
       document.getElementById('rock-video-wrap').style.display = 'none';
+      document.getElementById('hangi-bg-img').style.display = 'block';
     }
 
     updateSidebar(players, rockHolders);
@@ -710,6 +721,7 @@ function initSocket() {
   STATE.socket.on('round_result', ({ correct, results, players }) => {
     showResultFlash(correct, results);
     document.getElementById('rock-video-wrap').style.display = 'none';
+    document.getElementById('hangi-bg-img').style.display = 'none';
     updateSidebar(players, []);
     // disable buttons
     document.getElementById('answer-buttons').style.display = 'none';
