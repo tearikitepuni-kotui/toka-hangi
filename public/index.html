@@ -670,6 +670,8 @@ function initSocket() {
     // Reset answer buttons
     document.getElementById('btn-a').className = 'answer-btn';
     document.getElementById('btn-o').className = 'answer-btn';
+    document.getElementById('btn-a').disabled = false;
+    document.getElementById('btn-o').disabled = false;
 
     if (STATE.isHolder) {
       document.getElementById('answer-buttons').style.display = 'flex';
