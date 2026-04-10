@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Toka Hāngi</title>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+  :root {
+    --mint: #6ee7b7;
+    --mint-dark: #34d399;
+    --navy: #0d1b2a;
+    --navy-mid: #1a2e45;
+    --red-holder: #ef4444;
+    --white: #ffffff;
+    --gray-bg: #f3f4f6;
+    --gray-border: #d1fae5;
+    --text-dark: #111827;
+    --text-mid: #374151;
+    --text-muted: #9ca3af;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--white);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 18px 24px 14px;
+    border-bottom: 1.5px solid #e5e7eb;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .header h1 span { font-weight: 400; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── CENTERED CARD LAYOUT ── */
+  .center-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .card {
+    border: 2px solid var(--mint);
+    border-radius: 12px;
+    padding: 28px;
+    width: 100%;
+    max-width: 460px;
+    background: var(--white);
+  }
+  .card-label {
+    font-size: 14px;
+    color: var(--text-mid);
+    margin-bottom: 10px;
+  }
+
+  /* ── INPUTS ── */
+  .input-field {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid var(--mint);
+    border-radius: 10px;
+    background: var(--gray-bg);
+    font-size: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    outline: none;
+    margin-bottom: 12px;
+  }
+  .input-field:focus { border-color: var(--mint-dark); color: var(--text-dark); }
+
+  /* ── PASSWORD SCREEN special ── */
+  .pw-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 2px solid var(--mint);
+    border-radius: 10px;
+    background: var(--gray-bg);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .pw-field input {
+    border: none; background: transparent; outline: none;
+    font-size: 16px; width: 100%;
+  }
+  .pw-lock { font-size: 22px; }
+
+  /* ── BUTTONS ── */
+  .btn-navy {
+    width: 100%;
+    padding: 18px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+  .btn-navy:hover { background: var(--navy-mid); }
+  .btn-navy .arrow { color: var(--mint); font-size: 22px; }
+
+  .btn-mint {
+    width: 100%;
+    padding: 16px;
+    background: var(--mint);
+    color: var(--text-dark);
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-mint:hover { background: var(--mint-dark); }
+
+  /* ── ERROR ── */
+  .error-msg {
+    color: #dc2626;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+
+  /* ── PASSWORD SCREEN ── */
+  #screen-password .center-wrap {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── ENTRY SCREEN (join code + create) ── */
+  .entry-create-btn {
+    background: var(--mint);
+    color: var(--text-dark);
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    width: 100%;
+    max-width: 460px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* ── FACILITATOR LOBBY ── */
+  .fac-name-input {
+    width: 100%;
+    max-width: 460px;
+    padding: 18px;
+    background: var(--gray-bg);
+    border: 2px solid var(--mint);
+    border-radius: 10px;
+    font-size: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    outline: none;
+    margin-bottom: 12px;
+  }
+  .code-box {
+    background: var(--mint);
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 460px;
+    margin-bottom: 12px;
+  }
+  .code-box .code-label {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+  }
+  .code-box .code-letters {
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: 12px;
+    color: var(--text-dark);
+  }
+  .players-box {
+    border: 2px solid var(--mint);
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 460px;
+    margin-bottom: 12px;
+    min-height: 120px;
+  }
+  .players-box h3 { font-weight: 700; margin-bottom: 10px; }
+  .players-box .waiting { color: var(--text-muted); font-size: 14px; }
+  .player-pill {
+    display: inline-block;
+    background: var(--gray-bg);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    margin: 4px;
+    font-weight: 500;
+  }
+  .play-btn-wrap {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  /* ── WAITING SCREEN ── */
+  .waiting-badge {
+    border: 2px solid var(--mint);
+    border-radius: 12px;
+    padding: 22px 40px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dark);
+  }
+
+  /* ── GAME ARENA ── */
+  #screen-game {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  .game-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .game-bg video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.18;
+  }
+  .game-bg-fallback {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1a3a2a 50%, #0d2a1a 100%);
+  }
+  .game-overlay {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px;
+    min-height: 100vh;
+  }
+
+  /* Rock video - shown for holders */
+  .rock-video-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .rock-video-wrap video {
+    width: min(500px, 80vw);
+    border-radius: 16px;
+  }
+
+  /* Question banner */
+  .question-banner {
+    background: var(--mint);
+    border-radius: 12px;
+    padding: 18px 32px;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  /* Answer buttons (only shown to holders) */
+  .answer-buttons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .answer-btn {
+    background: var(--white);
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px 60px;
+    font-size: 26px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 140px;
+    text-align: center;
+  }
+  .answer-btn:hover { border-color: var(--mint); background: #f0fdf4; }
+  .answer-btn.selected-correct { background: #d1fae5; border-color: #10b981; }
+  .answer-btn.selected-wrong   { background: #fee2e2; border-color: #ef4444; }
+
+  /* Timer */
+  .timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .timer-bar-bg {
+    width: 220px; height: 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .timer-bar-fill {
+    height: 100%;
+    background: var(--mint);
+    border-radius: 5px;
+    transition: width 0.9s linear;
+  }
+  .timer-num {
+    color: var(--white);
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  /* Player sidebar */
+  .player-sidebar {
+    position: fixed;
+    left: 16px;
+    bottom: 30%;
+    z-index: 10;
+    background: rgba(255,255,255,0.97);
+    border: 2px solid var(--mint);
+    border-radius: 12px;
+    padding: 14px 18px;
+    min-width: 130px;
+  }
+  .sidebar-player {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 5px 0;
+    color: var(--text-dark);
+    transition: color 0.2s;
+  }
+  .sidebar-player.is-holder {
+    color: var(--red-holder);
+  }
+
+  /* Round result flash */
+  .result-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .result-flash-inner {
+    background: rgba(13,27,42,0.92);
+    border: 3px solid var(--mint);
+    border-radius: 16px;
+    padding: 32px 48px;
+    text-align: center;
+    color: white;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s;
+  }
+  .result-flash-inner.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .result-flash-inner .rf-correct { color: #34d399; font-size: 28px; font-weight: 800; }
+  .result-flash-inner .rf-wrong   { color: #f87171; font-size: 28px; font-weight: 800; }
+  .result-flash-inner .rf-answer  { font-size: 18px; margin-top: 6px; }
+
+  /* ── DEBRIEF / END ── */
+  #screen-debrief .center-wrap {
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+  }
+  .debrief-header {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+  .scores-table {
+    width: 100%;
+    max-width: 480px;
+    border-collapse: collapse;
+    margin-bottom: 28px;
+  }
+  .scores-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--navy);
+    color: var(--mint);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .scores-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 15px;
+  }
+  .scores-table tr:first-child td { font-weight: 700; background: #f0fdf4; }
+
+  .debrief-list {
+    width: 100%;
+    max-width: 480px;
+    max-height: 380px;
+    overflow-y: auto;
+    border: 2px solid var(--mint);
+    border-radius: 10px;
+  }
+  .debrief-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+  }
+  .debrief-item:last-child { border-bottom: none; }
+  .debrief-item .q-text { flex: 1; color: var(--text-mid); }
+  .debrief-badge {
+    background: var(--mint);
+    color: var(--text-dark);
+    font-weight: 800;
+    font-size: 16px;
+    border-radius: 6px;
+    padding: 4px 14px;
+    margin-left: 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 1: PASSWORD
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-password" class="screen active">
+  <div class="center-wrap" style="flex-direction:column;gap:12px;">
+    <div class="pw-field">
+      <span class="pw-lock">🔒</span>
+      <input type="password" id="pw-input" placeholder="Password" autocomplete="off"/>
+    </div>
+    <button class="btn-mint" style="max-width:280px;width:100%;" onclick="submitPassword()">Login</button>
+    <div class="error-msg" id="pw-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 2: ENTRY — Create or Join
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-entry" class="screen">
+  <div class="header"><h1>Toka Hāngi</h1></div>
+  <div class="center-wrap" style="flex-direction:column;align-items:center;gap:0;">
+    <button class="entry-create-btn" onclick="createGame()">Create Toka Hāngi Game</button>
+    <div class="card">
+      <div class="card-label">Join a Game</div>
+      <input class="input-field" id="join-code" placeholder="ENTER 4-DIGIT CODE" maxlength="4"/>
+      <button class="btn-navy" onclick="joinWithCode()">Join <span class="arrow">→</span></button>
+      <div class="error-msg" id="join-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 3: FACILITATOR LOBBY
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-facilitator" class="screen">
+  <div class="header"><h1><b>Toka Hāngi</b><span>: Facilitator Dashboard</span></h1></div>
+  <div class="center-wrap" style="flex-direction:column;align-items:center;gap:0;">
+    <input class="fac-name-input" id="fac-name" placeholder="ENTER YOUR NAME HERE"/>
+    <div class="code-box">
+      <div class="code-label">Share this code with your team</div>
+      <div class="code-letters" id="room-code-display">----</div>
+    </div>
+    <div class="players-box">
+      <h3>Players Joined (<span id="player-count">0</span>)</h3>
+      <div id="player-list-lobby"><span class="waiting">Waiting for teams to join...</span></div>
+    </div>
+    <div class="play-btn-wrap">
+      <button class="btn-navy" onclick="startGame()">Play <span class="arrow">→</span></button>
+      <div class="error-msg" id="fac-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 4: PLAYER — Enter name
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-player-join" class="screen">
+  <div class="header"><h1><b>Toka Hāngi</b><span>: Player Dashboard</span></h1></div>
+  <div class="center-wrap">
+    <div class="card">
+      <div class="card-label">Enter a name</div>
+      <input class="input-field" id="player-name-input" placeholder="ENTER NAME HERE"/>
+      <button class="btn-navy" onclick="submitPlayerName()">Join <span class="arrow">→</span></button>
+      <div class="error-msg" id="pname-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 5: PLAYER — Waiting for game
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-waiting" class="screen">
+  <div class="header"><h1><b>Toka Hāngi</b><span>: Player Dashboard</span></h1></div>
+  <div class="center-wrap">
+    <div class="waiting-badge">Waiting for game to start...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 6: GAME ARENA (fullscreen)
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+  <!-- Background -->
+  <div class="game-bg">
+    <div class="game-bg-fallback"></div>
+  </div>
+
+  <!-- Rock video (holders only) -->
+  <div class="rock-video-wrap" id="rock-video-wrap" style="display:none;">
+    <video id="rock-video" autoplay loop muted playsinline>
+      <source src="/assets/rock.mp4" type="video/mp4"/>
+    </video>
+  </div>
+
+  <!-- Main overlay -->
+  <div class="game-overlay">
+    <!-- Question -->
+    <div class="question-banner" id="question-text">Te mana _ Kahungunu</div>
+
+    <!-- Timer -->
+    <div class="timer-wrap">
+      <div class="timer-bar-bg">
+        <div class="timer-bar-fill" id="timer-bar" style="width:100%;"></div>
+      </div>
+      <div class="timer-num" id="timer-num">8</div>
+    </div>
+
+    <!-- Answer buttons (holders only) -->
+    <div class="answer-buttons" id="answer-buttons" style="display:none;">
+      <button class="answer-btn" id="btn-a" onclick="submitAnswer('a')">a</button>
+      <button class="answer-btn" id="btn-o" onclick="submitAnswer('o')">o</button>
+    </div>
+
+    <!-- Status for non-holders -->
+    <div id="watching-msg" style="color:rgba(255,255,255,0.7);font-size:15px;margin-bottom:16px;display:none;">
+      👀 Watch the rock holders answer...
+    </div>
+  </div>
+
+  <!-- Player sidebar -->
+  <div class="player-sidebar" id="player-sidebar"></div>
+
+  <!-- Round result flash -->
+  <div class="result-flash" id="result-flash">
+    <div class="result-flash-inner" id="result-flash-inner"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 7: DEBRIEF
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-debrief" class="screen">
+  <div class="header"><h1><b>Toka Hāngi</b><span>: Game Over</span></h1></div>
+  <div class="center-wrap">
+    <div style="width:100%;max-width:480px;">
+      <div class="debrief-header">🏆 Final Scores</div>
+      <table class="scores-table" id="scores-table">
+        <thead><tr><th>#</th><th>Player</th><th>Score</th></tr></thead>
+        <tbody id="scores-body"></tbody>
+      </table>
+      <div class="debrief-header" style="font-size:20px;">📋 All Questions</div>
+      <div class="debrief-list" id="debrief-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const STATE = {
+  socket: null,
+  role: null,          // 'facilitator' | 'player'
+  roomCode: null,
+  mySocketId: null,
+  myName: null,
+  pendingCode: null,   // code entered on join screen
+  isHolder: false,
+  answered: false,
+  timerMax: 8,
+};
+
+const ADMIN_PASSWORD = 'hangi2025'; // change as needed
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SOCKET INIT
+// ═══════════════════════════════════════════════════════
+function initSocket() {
+  if (STATE.socket) return;
+  STATE.socket = io();
+  STATE.mySocketId = STATE.socket.id;
+
+  STATE.socket.on('connect', () => {
+    STATE.mySocketId = STATE.socket.id;
+  });
+
+  STATE.socket.on('player_joined', ({ players }) => {
+    updateLobbyPlayers(players);
+  });
+
+  STATE.socket.on('player_left', ({ players }) => {
+    updateLobbyPlayers(players);
+  });
+
+  STATE.socket.on('game_starting', ({ players }) => {
+    // Both facilitator and players transition to game screen
+    showScreen('game');
+    updateSidebar(players, []);
+  });
+
+  STATE.socket.on('round_start', ({ question, rockHolders, players, duration }) => {
+    STATE.answered = false;
+    STATE.isHolder = rockHolders.includes(STATE.mySocketId);
+
+    document.getElementById('question-text').textContent = question;
+    document.getElementById('timer-bar').style.width = '100%';
+    document.getElementById('timer-num').textContent = STATE.timerMax;
+
+    // Reset answer buttons
+    document.getElementById('btn-a').className = 'answer-btn';
+    document.getElementById('btn-o').className = 'answer-btn';
+
+    if (STATE.isHolder) {
+      document.getElementById('answer-buttons').style.display = 'flex';
+      document.getElementById('watching-msg').style.display = 'none';
+      document.getElementById('rock-video-wrap').style.display = 'flex';
+    } else {
+      document.getElementById('answer-buttons').style.display = 'none';
+      document.getElementById('watching-msg').style.display = 'block';
+      document.getElementById('rock-video-wrap').style.display = 'none';
+    }
+
+    updateSidebar(players, rockHolders);
+  });
+
+  STATE.socket.on('timer_tick', ({ secondsLeft }) => {
+    document.getElementById('timer-num').textContent = secondsLeft;
+    const pct = (secondsLeft / STATE.timerMax) * 100;
+    document.getElementById('timer-bar').style.width = pct + '%';
+  });
+
+  STATE.socket.on('answer_received', ({ socketId, result }) => {
+    if (socketId === STATE.mySocketId) {
+      const correct = result === 'correct';
+      document.getElementById('btn-' + (correct ? 'o' : 'a')); // visual handled by submit
+    }
+  });
+
+  STATE.socket.on('round_result', ({ correct, results, players }) => {
+    showResultFlash(correct, results);
+    document.getElementById('rock-video-wrap').style.display = 'none';
+    updateSidebar(players, []);
+    // disable buttons
+    document.getElementById('answer-buttons').style.display = 'none';
+    document.getElementById('watching-msg').style.display = 'none';
+  });
+
+  STATE.socket.on('game_over', ({ players, debrief }) => {
+    showScreen('debrief');
+    buildDebrief(players, debrief);
+  });
+
+  STATE.socket.on('room_closed', ({ reason }) => {
+    alert('Room closed: ' + reason);
+    showScreen('entry');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN 1 — PASSWORD
+// ═══════════════════════════════════════════════════════
+function submitPassword() {
+  const val = document.getElementById('pw-input').value.trim();
+  if (val === ADMIN_PASSWORD) {
+    showScreen('entry');
+  } else {
+    document.getElementById('pw-error').textContent = 'Incorrect password.';
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitPassword();
+});
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN 2 — ENTRY
+// ═══════════════════════════════════════════════════════
+function createGame() {
+  initSocket();
+  STATE.role = 'facilitator';
+  STATE.socket.emit('create_room', { password: ADMIN_PASSWORD }, (res) => {
+    if (res.error) { alert(res.error); return; }
+    STATE.roomCode = res.code;
+    document.getElementById('room-code-display').textContent = res.code.split('').join(' ');
+    showScreen('facilitator');
+  });
+}
+
+function joinWithCode() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length !== 4) {
+    document.getElementById('join-error').textContent = 'Please enter a 4-letter code.';
+    return;
+  }
+  STATE.pendingCode = code;
+  STATE.role = 'player';
+  showScreen('player-join');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN 3 — FACILITATOR LOBBY
+// ═══════════════════════════════════════════════════════
+function updateLobbyPlayers(players) {
+  const list = document.getElementById('player-list-lobby');
+  const count = document.getElementById('player-count');
+  count.textContent = players.length;
+  if (players.length === 0) {
+    list.innerHTML = '<span class="waiting">Waiting for teams to join...</span>';
+  } else {
+    list.innerHTML = players.map(p =>
+      `<span class="player-pill">${p.name}</span>`
+    ).join('');
+  }
+}
+
+function startGame() {
+  const err = document.getElementById('fac-error');
+  STATE.socket.emit('start_game', {}, (res) => {
+    if (res?.error) { err.textContent = res.error; return; }
+    err.textContent = '';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN 4 — PLAYER JOIN NAME
+// ═══════════════════════════════════════════════════════
+function submitPlayerName() {
+  const name = document.getElementById('player-name-input').value.trim();
+  const err  = document.getElementById('pname-error');
+  if (!name) { err.textContent = 'Please enter a name.'; return; }
+
+  initSocket();
+  STATE.myName = name;
+
+  STATE.socket.emit('join_room', {
+    code: STATE.pendingCode,
+    name,
+    password: ADMIN_PASSWORD,
+  }, (res) => {
+    if (!res.ok) { err.textContent = res.error; return; }
+    err.textContent = '';
+    showScreen('waiting');
+  });
+}
+
+document.getElementById('player-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitPlayerName();
+});
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN 6 — GAME
+// ═══════════════════════════════════════════════════════
+function updateSidebar(players, rockHolders) {
+  const sidebar = document.getElementById('player-sidebar');
+  sidebar.innerHTML = players.map(p => {
+    const isHolder = rockHolders.includes(p.id);
+    return `<div class="sidebar-player ${isHolder ? 'is-holder' : ''}">
+      ${p.name} <span style="font-size:12px;color:#6b7280;">${p.score > 0 ? '+' : ''}${p.score}</span>
+    </div>`;
+  }).join('');
+}
+
+function submitAnswer(answer) {
+  if (STATE.answered || !STATE.isHolder) return;
+  STATE.answered = true;
+  STATE.socket.emit('submit_answer', { answer });
+
+  // Visual feedback immediately
+  document.getElementById('btn-a').disabled = true;
+  document.getElementById('btn-o').disabled = true;
+}
+
+function showResultFlash(correctAnswer, results) {
+  const inner = document.getElementById('result-flash-inner');
+
+  // Did I get it right?
+  const myResult = results.find(r => r.socketId === STATE.mySocketId);
+
+  let html = '';
+  if (myResult) {
+    if (myResult.result === 'correct') {
+      html = `<div class="rf-correct">✓ Correct! +1</div>`;
+    } else if (myResult.result === 'timeout') {
+      html = `<div class="rf-wrong">⏱ Time's up! -1</div>`;
+    } else {
+      html = `<div class="rf-wrong">✗ Wrong! -1</div>`;
+    }
+  }
+  html += `<div class="rf-answer">Answer: <b>${correctAnswer}</b></div>`;
+  inner.innerHTML = html;
+  inner.classList.add('show');
+  setTimeout(() => inner.classList.remove('show'), 2000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN 7 — DEBRIEF
+// ═══════════════════════════════════════════════════════
+function buildDebrief(players, debrief) {
+  const tbody = document.getElementById('scores-body');
+  tbody.innerHTML = players.map((p, i) =>
+    `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.score}</td></tr>`
+  ).join('');
+
+  const list = document.getElementById('debrief-list');
+  list.innerHTML = debrief.map(q =>
+    `<div class="debrief-item">
+      <span class="q-text">${q.question}</span>
+      <span class="debrief-badge">${q.correct}</span>
+    </div>`
+  ).join('');
+}
+</script>
+</body>
+</html>
