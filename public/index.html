@@ -80,24 +80,7 @@
   }
   .input-field:focus { border-color: var(--mint-dark); color: var(--text-dark); }
 
-  /* ── PASSWORD SCREEN special ── */
-  .pw-field {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 2px solid var(--mint);
-    border-radius: 10px;
-    background: var(--gray-bg);
-    padding: 14px 16px;
-    margin-bottom: 14px;
-    width: 100%;
-    max-width: 280px;
-  }
-  .pw-field input {
-    border: none; background: transparent; outline: none;
-    font-size: 16px; width: 100%;
-  }
-  .pw-lock { font-size: 22px; }
+
 
   /* ── BUTTONS ── */
   .btn-navy {
@@ -484,24 +467,12 @@
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 1: PASSWORD
-═══════════════════════════════════════════════════════════ -->
-<div id="screen-password" class="screen active">
-  <div class="center-wrap" style="flex-direction:column;gap:12px;">
-    <div class="pw-field">
-      <span class="pw-lock">🔒</span>
-      <input type="password" id="pw-input" placeholder="Password" autocomplete="off"/>
-    </div>
-    <button class="btn-mint" style="max-width:280px;width:100%;" onclick="submitPassword()">Login</button>
-    <div class="error-msg" id="pw-error"></div>
-  </div>
-</div>
+
 
 <!-- ══════════════════════════════════════════════════════
      SCREEN 2: ENTRY — Create or Join
 ═══════════════════════════════════════════════════════════ -->
-<div id="screen-entry" class="screen">
+<div id="screen-entry" class="screen active">
   <div class="header"><h1>Toka Hāngi</h1></div>
   <div class="center-wrap" style="flex-direction:column;align-items:center;gap:0;">
     <button class="entry-create-btn" onclick="createGame()">Create Multiplayer Game</button>
@@ -676,7 +647,7 @@ const STATE = {
   soloTimer: null,
 };
 
-const ADMIN_PASSWORD = 'hangi2025'; // change as needed
+const ADMIN_PASSWORD = 'hangi2025';
 
 // ═══════════════════════════════════════════════════════
 //  SCREEN MANAGEMENT
@@ -782,17 +753,7 @@ function initSocket() {
 // ═══════════════════════════════════════════════════════
 //  SCREEN 1 — PASSWORD
 // ═══════════════════════════════════════════════════════
-function submitPassword() {
-  const val = document.getElementById('pw-input').value.trim();
-  if (val === ADMIN_PASSWORD) {
-    showScreen('entry');
-  } else {
-    document.getElementById('pw-error').textContent = 'Incorrect password.';
-  }
-}
-document.getElementById('pw-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') submitPassword();
-});
+
 
 // ═══════════════════════════════════════════════════════
 //  SCREEN 2 — ENTRY
