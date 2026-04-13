@@ -126,10 +126,6 @@
   }
 
   /* ── PASSWORD SCREEN ── */
-  #screen-password .center-wrap {
-    flex-direction: column;
-    gap: 12px;
-  }
 
   /* ── ENTRY SCREEN (join code + create) ── */
   .entry-create-btn {
@@ -826,8 +822,11 @@ function submitPlayerName() {
   });
 }
 
-document.getElementById('player-name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') submitPlayerName();
+document.addEventListener('DOMContentLoaded', () => {
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) nameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitPlayerName();
+  });
 });
 
 // ═══════════════════════════════════════════════════════
