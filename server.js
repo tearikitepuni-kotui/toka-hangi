@@ -13,6 +13,12 @@ const io     = new Server(server, { cors: { origin: '*' } });
 const rooms  = new RoomManager();
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Expose questions for solo mode
+app.get('/questions.json', (_req, res) =>
+  res.sendFile(path.join(__dirname, 'questions.json'))
+);
+
 app.get('*', (_req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'index.html'))
 );

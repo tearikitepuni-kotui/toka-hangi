@@ -226,6 +226,28 @@
     max-width: 460px;
   }
 
+  /* ── SOLO MODE ── */
+  .solo-option-btn {
+    width: 100%;
+    padding: 18px;
+    margin-bottom: 12px;
+    background: var(--white);
+    border: 2px solid var(--mint);
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-dark);
+  }
+  .solo-option-btn:hover { background: var(--mint); }
+  .solo-progress {
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
   /* ── WAITING SCREEN ── */
   .waiting-badge {
     border: 2px solid var(--mint);
@@ -482,13 +504,28 @@
 <div id="screen-entry" class="screen">
   <div class="header"><h1>Toka Hāngi</h1></div>
   <div class="center-wrap" style="flex-direction:column;align-items:center;gap:0;">
-    <button class="entry-create-btn" onclick="createGame()">Create Toka Hāngi Game</button>
+    <button class="entry-create-btn" onclick="createGame()">Create Multiplayer Game</button>
+    <button class="entry-create-btn" onclick="showScreen('solo')" style="background:var(--white);border:2px solid var(--mint);margin-bottom:12px;">Solo Practice</button>
     <div class="card">
       <div class="card-label">Join a Game</div>
       <input class="input-field" id="join-code" placeholder="ENTER 4-DIGIT CODE" maxlength="4"/>
       <button class="btn-navy" onclick="joinWithCode()">Join <span class="arrow">→</span></button>
       <div class="error-msg" id="join-error"></div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: SOLO — choose question count
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-solo" class="screen">
+  <div class="header"><h1><b>Toka Hāngi</b><span>: Solo Practice</span></h1></div>
+  <div class="center-wrap" style="flex-direction:column;align-items:center;">
+    <div style="font-size:17px;font-weight:600;margin-bottom:20px;">How many questions?</div>
+    <button class="solo-option-btn" onclick="startSolo(10)">10 Questions</button>
+    <button class="solo-option-btn" onclick="startSolo(20)">20 Questions</button>
+    <button class="solo-option-btn" onclick="startSolo(50)">50 Questions</button>
+    <button onclick="showScreen('entry')" style="margin-top:8px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;">← Back</button>
   </div>
 </div>
 
@@ -629,6 +666,14 @@ const STATE = {
   isHolder: false,
   answered: false,
   timerMax: 8,
+  // Solo mode
+  soloMode: false,
+  soloQuestions: [],
+  soloIndex: 0,
+  soloTotal: 0,
+  soloScore: 0,
+  soloAnswered: false,
+  soloTimer: null,
 };
 
 const ADMIN_PASSWORD = 'hangi2025'; // change as needed
@@ -838,6 +883,11 @@ function updateSidebar(players, rockHolders) {
 }
 
 function submitAnswer(answer) {
+  // Route to solo handler if in solo mode
+  if (STATE.soloMode) {
+    soloHandleAnswer(answer);
+    return;
+  }
   if (STATE.answered || !STATE.isHolder) return;
   STATE.answered = true;
   STATE.socket.emit('submit_answer', { answer });
@@ -886,7 +936,157 @@ function buildDebrief(players, debrief) {
     </div>`
   ).join('');
 }
+// ═══════════════════════════════════════════════════════
+//  SOLO MODE
+// ═══════════════════════════════════════════════════════
+const ALL_QUESTIONS = null; // loaded via fetch below
+
+async function startSolo(count) {
+  STATE.soloMode = true;
+  STATE.soloTotal = count;
+  STATE.soloScore = 0;
+  STATE.soloIndex = 0;
+
+  // Fetch questions from server
+  const res = await fetch('/questions.json');
+  const all = await res.json();
+
+  // Shuffle and take requested count
+  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, count);
+  STATE.soloQuestions = shuffled;
+
+  showScreen('game');
+  // Hide multiplayer sidebar
+  document.getElementById('player-sidebar').style.display = 'none';
+  soloNextQuestion();
+}
+
+function soloNextQuestion() {
+  if (STATE.soloIndex >= STATE.soloTotal) {
+    return soloEndGame();
+  }
+
+  STATE.soloAnswered = false;
+  const q = STATE.soloQuestions[STATE.soloIndex];
+
+  document.getElementById('question-text').textContent = q.question;
+  document.getElementById('timer-bar').style.width = '100%';
+  document.getElementById('timer-num').textContent = STATE.timerMax;
+  document.getElementById('btn-a').className = 'answer-btn';
+  document.getElementById('btn-o').className = 'answer-btn';
+  document.getElementById('btn-a').disabled = false;
+  document.getElementById('btn-o').disabled = false;
+  document.getElementById('answer-buttons').style.display = 'flex';
+  document.getElementById('watching-msg').style.display = 'none';
+
+  // Show progress
+  let prog = document.getElementById('solo-progress');
+  if (!prog) {
+    prog = document.createElement('div');
+    prog.id = 'solo-progress';
+    prog.className = 'solo-progress';
+    document.querySelector('.game-overlay').insertBefore(prog, document.getElementById('question-text'));
+  }
+  prog.textContent = 'Question ' + (STATE.soloIndex + 1) + ' of ' + STATE.soloTotal + '  |  Score: ' + STATE.soloScore;
+
+  // Reset video
+  const vid = document.getElementById('rock-video');
+  vid.pause();
+  vid.currentTime = 0;
+  vid.play();
+  document.getElementById('rock-video-wrap').style.display = 'flex';
+
+  // Start timer
+  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
+  let secondsLeft = STATE.timerMax;
+  STATE.soloTimer = setInterval(() => {
+    secondsLeft--;
+    document.getElementById('timer-num').textContent = secondsLeft;
+    const pct = (secondsLeft / STATE.timerMax) * 100;
+    document.getElementById('timer-bar').style.width = pct + '%';
+    if (secondsLeft <= 0) {
+      clearInterval(STATE.soloTimer);
+      soloHandleTimeout();
+    }
+  }, 1000);
+}
+
+function soloHandleAnswer(answer) {
+  if (STATE.soloAnswered || !STATE.soloMode) return;
+  STATE.soloAnswered = true;
+  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
+
+  const q = STATE.soloQuestions[STATE.soloIndex];
+  const correct = answer === q.correct;
+  if (correct) {
+    STATE.soloScore++;
+    document.getElementById('btn-' + answer).className = 'answer-btn selected-correct';
+  } else {
+    STATE.soloScore--;
+    document.getElementById('btn-' + answer).className = 'answer-btn selected-wrong';
+  }
+  document.getElementById('btn-a').disabled = true;
+  document.getElementById('btn-o').disabled = true;
+
+  // Show flash then next question
+  const inner = document.getElementById('result-flash-inner');
+  inner.innerHTML = correct
+    ? '<div class="rf-correct">✓ Correct! +1</div><div class="rf-answer">Answer: <b>' + q.correct + '</b></div>'
+    : '<div class="rf-wrong">✗ Wrong! -1</div><div class="rf-answer">Answer: <b>' + q.correct + '</b></div>';
+  inner.classList.add('show');
+
+  setTimeout(() => {
+    inner.classList.remove('show');
+    STATE.soloIndex++;
+    soloNextQuestion();
+  }, 1500);
+}
+
+function soloHandleTimeout() {
+  if (STATE.soloAnswered) return;
+  STATE.soloAnswered = true;
+  STATE.soloScore--;
+
+  const q = STATE.soloQuestions[STATE.soloIndex];
+  const inner = document.getElementById('result-flash-inner');
+  inner.innerHTML = '<div class="rf-wrong">⏱ Time's up! -1</div><div class="rf-answer">Answer: <b>' + q.correct + '</b></div>';
+  inner.classList.add('show');
+
+  setTimeout(() => {
+    inner.classList.remove('show');
+    STATE.soloIndex++;
+    soloNextQuestion();
+  }, 1500);
+}
+
+function soloEndGame() {
+  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
+  document.getElementById('rock-video-wrap').style.display = 'none';
+  document.getElementById('player-sidebar').style.display = '';
+
+  // Remove progress indicator
+  const prog = document.getElementById('solo-progress');
+  if (prog) prog.remove();
+
+  // Build solo debrief
+  showScreen('debrief');
+  const tbody = document.getElementById('scores-body');
+  tbody.innerHTML = '<tr><td>1</td><td>You</td><td>' + STATE.soloScore + '</td></tr>';
+
+  const list = document.getElementById('debrief-list');
+  list.innerHTML = STATE.soloQuestions.map(q =>
+    '<div class="debrief-item"><span class="q-text">' + q.question + '</span><span class="debrief-badge">' + q.correct + '</span></div>'
+  ).join('');
+
+  STATE.soloMode = false;
+}
+
 function exitGame() {
+  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
+  STATE.soloMode = false;
+  const prog = document.getElementById('solo-progress');
+  if (prog) prog.remove();
+  document.getElementById('player-sidebar').style.display = '';
   if (STATE.socket) {
     STATE.socket.disconnect();
     STATE.socket = null;
