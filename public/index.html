@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Toka Hāngi</title>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <style>
   :root {
     --mint: #6ee7b7;
@@ -14,494 +14,119 @@
     --red-holder: #ef4444;
     --white: #ffffff;
     --gray-bg: #f3f4f6;
-    --gray-border: #d1fae5;
     --text-dark: #111827;
     --text-mid: #374151;
     --text-muted: #9ca3af;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--white); color: var(--text-dark); min-height: 100vh; }
 
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--white);
-    color: var(--text-dark);
-    min-height: 100vh;
-  }
-
-  /* ── HEADER ── */
-  .header {
-    padding: 18px 24px 14px;
-    border-bottom: 1.5px solid #e5e7eb;
-  }
+  .header { padding: 18px 24px 14px; border-bottom: 1.5px solid #e5e7eb; }
   .header h1 { font-size: 20px; font-weight: 700; }
   .header h1 span { font-weight: 400; }
 
-  /* ── SCREENS ── */
-  .screen { display: none; }
-  .screen.active { display: flex; flex-direction: column; }
+  .screen { display: none; flex-direction: column; min-height: 100vh; }
+  .screen.active { display: flex; }
 
-  /* ── CENTERED CARD LAYOUT ── */
-  .center-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 16px;
-  }
-  .card {
-    border: 2px solid var(--mint);
-    border-radius: 12px;
-    padding: 28px;
-    width: 100%;
-    max-width: 460px;
-    background: var(--white);
-  }
-  .card-label {
-    font-size: 14px;
-    color: var(--text-mid);
-    margin-bottom: 10px;
-  }
+  .center-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 16px; }
 
-  /* ── INPUTS ── */
-  .input-field {
-    width: 100%;
-    padding: 16px;
-    border: 2px solid var(--mint);
-    border-radius: 10px;
-    background: var(--gray-bg);
-    font-size: 15px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    outline: none;
-    margin-bottom: 12px;
-  }
-  .input-field:focus { border-color: var(--mint-dark); color: var(--text-dark); }
-
-
-
-  /* ── BUTTONS ── */
-  .btn-navy {
-    width: 100%;
-    padding: 18px;
-    background: var(--navy);
-    color: var(--white);
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: background 0.15s;
-  }
+  .btn-navy { width: 100%; padding: 18px; background: var(--navy); color: var(--white); border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .btn-navy:hover { background: var(--navy-mid); }
-  .btn-navy .arrow { color: var(--mint); font-size: 22px; }
+  .btn-arrow { color: var(--mint); font-size: 22px; }
 
-  .btn-mint {
-    width: 100%;
-    padding: 16px;
-    background: var(--mint);
-    color: var(--text-dark);
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .btn-mint:hover { background: var(--mint-dark); }
+  .card { border: 2px solid var(--mint); border-radius: 12px; padding: 28px; width: 100%; max-width: 460px; background: var(--white); }
+  .card-label { font-size: 14px; color: var(--text-mid); margin-bottom: 10px; }
+  .input-field { width: 100%; padding: 16px; border: 2px solid var(--mint); border-radius: 10px; background: var(--gray-bg); font-size: 15px; text-align: center; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); outline: none; margin-bottom: 12px; }
+  .input-field:focus { border-color: var(--mint-dark); color: var(--text-dark); }
+  .error-msg { color: #dc2626; font-size: 13px; text-align: center; margin-top: 8px; min-height: 18px; }
 
-  /* ── ERROR ── */
-  .error-msg {
-    color: #dc2626;
-    font-size: 13px;
-    text-align: center;
-    margin-top: 8px;
-    min-height: 18px;
-  }
+  .entry-btn { width: 100%; max-width: 460px; padding: 18px; margin-bottom: 12px; border-radius: 10px; font-size: 17px; font-weight: 700; cursor: pointer; text-align: center; border: 2px solid var(--mint); }
+  .entry-btn-mint { background: var(--mint); color: var(--text-dark); }
+  .entry-btn-mint:hover { background: var(--mint-dark); }
+  .entry-btn-outline { background: var(--white); color: var(--text-dark); }
+  .entry-btn-outline:hover { background: #f0fdf4; }
 
-  /* ── PASSWORD SCREEN ── */
+  .solo-btn { width: 100%; max-width: 460px; padding: 18px; margin-bottom: 12px; background: var(--white); border: 2px solid var(--mint); border-radius: 10px; font-size: 20px; font-weight: 700; cursor: pointer; color: var(--text-dark); }
+  .solo-btn:hover { background: var(--mint); }
 
-  /* ── ENTRY SCREEN (join code + create) ── */
-  .entry-create-btn {
-    background: var(--mint);
-    color: var(--text-dark);
-    border: none;
-    border-radius: 10px;
-    padding: 16px;
-    width: 100%;
-    max-width: 460px;
-    font-size: 17px;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: center;
-    margin-bottom: 12px;
-  }
-
-  /* ── FACILITATOR LOBBY ── */
-  .fac-name-input {
-    width: 100%;
-    max-width: 460px;
-    padding: 18px;
-    background: var(--gray-bg);
-    border: 2px solid var(--mint);
-    border-radius: 10px;
-    font-size: 15px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    outline: none;
-    margin-bottom: 12px;
-  }
-  .code-box {
-    background: var(--mint);
-    border-radius: 12px;
-    padding: 28px 20px;
-    text-align: center;
-    width: 100%;
-    max-width: 460px;
-    margin-bottom: 12px;
-  }
-  .code-box .code-label {
-    font-weight: 700;
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: var(--text-dark);
-  }
-  .code-box .code-letters {
-    font-size: 56px;
-    font-weight: 900;
-    letter-spacing: 12px;
-    color: var(--text-dark);
-  }
-  .players-box {
-    border: 2px solid var(--mint);
-    border-radius: 12px;
-    padding: 20px;
-    width: 100%;
-    max-width: 460px;
-    margin-bottom: 12px;
-    min-height: 120px;
-  }
+  .fac-name-input { width: 100%; max-width: 460px; padding: 18px; background: var(--gray-bg); border: 2px solid var(--mint); border-radius: 10px; font-size: 15px; text-align: center; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); outline: none; margin-bottom: 12px; }
+  .code-box { background: var(--mint); border-radius: 12px; padding: 28px 20px; text-align: center; width: 100%; max-width: 460px; margin-bottom: 12px; }
+  .code-label { font-weight: 700; font-size: 16px; margin-bottom: 8px; color: var(--text-dark); }
+  .code-letters { font-size: 56px; font-weight: 900; letter-spacing: 12px; color: var(--text-dark); }
+  .players-box { border: 2px solid var(--mint); border-radius: 12px; padding: 20px; width: 100%; max-width: 460px; margin-bottom: 12px; min-height: 120px; }
   .players-box h3 { font-weight: 700; margin-bottom: 10px; }
-  .players-box .waiting { color: var(--text-muted); font-size: 14px; }
-  .player-pill {
-    display: inline-block;
-    background: var(--gray-bg);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 14px;
-    margin: 4px;
-    font-weight: 500;
-  }
-  .play-btn-wrap {
-    width: 100%;
-    max-width: 460px;
-  }
+  .player-pill { display: inline-block; background: var(--gray-bg); border-radius: 20px; padding: 6px 14px; font-size: 14px; margin: 4px; font-weight: 500; }
 
-  /* ── SOLO MODE ── */
-  .solo-option-btn {
-    width: 100%;
-    padding: 18px;
-    margin-bottom: 12px;
-    background: var(--white);
-    border: 2px solid var(--mint);
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--text-dark);
-  }
-  .solo-option-btn:hover { background: var(--mint); }
-  .solo-progress {
-    color: rgba(255,255,255,0.8);
-    font-size: 14px;
-    margin-bottom: 10px;
-    text-align: center;
-  }
+  .waiting-badge { border: 2px solid var(--mint); border-radius: 12px; padding: 22px 40px; font-size: 17px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 
-  /* ── WAITING SCREEN ── */
-  .waiting-badge {
-    border: 2px solid var(--mint);
-    border-radius: 12px;
-    padding: 22px 40px;
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dark);
-  }
-
-  /* ── GAME ARENA ── */
-  #screen-game {
-    position: relative;
-    min-height: 100vh;
-    overflow: hidden;
-  }
-  .game-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-  }
-  .game-bg video {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    opacity: 0.18;
-  }
-  .game-bg-fallback {
-    width: 100%; height: 100%;
-    background: linear-gradient(135deg, #0d1b2a 0%, #1a3a2a 50%, #0d2a1a 100%);
-  }
-  .game-overlay {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 16px;
-    min-height: 100vh;
-  }
-
-  /* Rock video - shown for holders */
-  .rock-video-wrap {
-    position: fixed;
-    inset: 0;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-  }
-  .rock-video-wrap video {
-    width: min(500px, 80vw);
-    border-radius: 16px;
-  }
-
-  /* Question banner */
-  .question-banner {
-    background: var(--mint);
-    border-radius: 12px;
-    padding: 18px 32px;
-    font-size: 22px;
-    font-weight: 700;
-    text-align: center;
-    color: var(--text-dark);
-    margin-bottom: 16px;
-    max-width: 600px;
-    width: 100%;
-  }
-
-  /* Answer buttons (only shown to holders) */
-  .answer-buttons {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  .answer-btn {
-    background: var(--white);
-    border: 2px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 18px 60px;
-    font-size: 26px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    min-width: 140px;
-    text-align: center;
-  }
+  #screen-game { position: relative; min-height: 100vh; overflow: hidden; background: #0d1b2a; }
+  .game-overlay { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 60px 16px 20px; min-height: 100vh; }
+  .question-banner { background: var(--mint); border-radius: 12px; padding: 18px 32px; font-size: 22px; font-weight: 700; text-align: center; color: var(--text-dark); margin-bottom: 16px; max-width: 600px; width: 100%; }
+  .answer-buttons { display: flex; gap: 16px; margin-bottom: 20px; }
+  .answer-btn { background: var(--white); border: 2px solid #e5e7eb; border-radius: 10px; padding: 18px 60px; font-size: 26px; font-weight: 700; cursor: pointer; min-width: 140px; text-align: center; }
   .answer-btn:hover { border-color: var(--mint); background: #f0fdf4; }
-  .answer-btn.selected-correct { background: #d1fae5; border-color: #10b981; }
-  .answer-btn.selected-wrong   { background: #fee2e2; border-color: #ef4444; }
+  .answer-btn.correct { background: #d1fae5; border-color: #10b981; }
+  .answer-btn.wrong { background: #fee2e2; border-color: #ef4444; }
+  .timer-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .timer-bar-bg { width: 220px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; overflow: hidden; }
+  .timer-bar-fill { height: 100%; background: var(--mint); border-radius: 5px; transition: width 0.9s linear; }
+  .timer-num { color: var(--white); font-size: 20px; font-weight: 700; min-width: 28px; text-align: center; }
+  .solo-progress { color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 10px; text-align: center; }
+  .player-sidebar { position: fixed; left: 16px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(255,255,255,0.97); border: 2px solid var(--mint); border-radius: 12px; padding: 14px 18px; min-width: 130px; }
+  .sidebar-player { font-size: 15px; font-weight: 600; padding: 5px 0; color: var(--text-dark); }
+  .sidebar-player.holder { color: var(--red-holder); }
+  .rock-video-wrap { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .rock-video-wrap video { width: min(500px, 80vw); border-radius: 16px; }
+  .result-flash { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .result-inner { background: rgba(13,27,42,0.92); border: 3px solid var(--mint); border-radius: 16px; padding: 32px 48px; text-align: center; color: white; opacity: 0; transform: scale(0.8); transition: all 0.2s; }
+  .result-inner.show { opacity: 1; transform: scale(1); }
+  .rf-correct { color: #34d399; font-size: 28px; font-weight: 800; }
+  .rf-wrong { color: #f87171; font-size: 28px; font-weight: 800; }
+  .rf-answer { font-size: 18px; margin-top: 6px; }
 
-  /* Timer */
-  .timer-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .timer-bar-bg {
-    width: 220px; height: 10px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 5px;
-    overflow: hidden;
-  }
-  .timer-bar-fill {
-    height: 100%;
-    background: var(--mint);
-    border-radius: 5px;
-    transition: width 0.9s linear;
-  }
-  .timer-num {
-    color: var(--white);
-    font-size: 20px;
-    font-weight: 700;
-    min-width: 28px;
-    text-align: center;
-  }
-
-  /* Player sidebar */
-  .player-sidebar {
-    position: fixed;
-    left: 16px;
-    bottom: 30%;
-    z-index: 10;
-    background: rgba(255,255,255,0.97);
-    border: 2px solid var(--mint);
-    border-radius: 12px;
-    padding: 14px 18px;
-    min-width: 130px;
-  }
-  .sidebar-player {
-    font-size: 15px;
-    font-weight: 600;
-    padding: 5px 0;
-    color: var(--text-dark);
-    transition: color 0.2s;
-  }
-  .sidebar-player.is-holder {
-    color: var(--red-holder);
-  }
-
-  /* Round result flash */
-  .result-flash {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-  }
-  .result-flash-inner {
-    background: rgba(13,27,42,0.92);
-    border: 3px solid var(--mint);
-    border-radius: 16px;
-    padding: 32px 48px;
-    text-align: center;
-    color: white;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.2s;
-  }
-  .result-flash-inner.show {
-    opacity: 1;
-    transform: scale(1);
-  }
-  .result-flash-inner .rf-correct { color: #34d399; font-size: 28px; font-weight: 800; }
-  .result-flash-inner .rf-wrong   { color: #f87171; font-size: 28px; font-weight: 800; }
-  .result-flash-inner .rf-answer  { font-size: 18px; margin-top: 6px; }
-
-  /* ── DEBRIEF / END ── */
-  #screen-debrief .center-wrap {
-    flex-direction: column;
-    align-items: center;
-    padding: 32px 16px;
-  }
-  .debrief-header {
-    font-size: 26px;
-    font-weight: 800;
-    margin-bottom: 20px;
-  }
-  .scores-table {
-    width: 100%;
-    max-width: 480px;
-    border-collapse: collapse;
-    margin-bottom: 28px;
-  }
-  .scores-table th {
-    text-align: left;
-    padding: 10px 14px;
-    background: var(--navy);
-    color: var(--mint);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .scores-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid #e5e7eb;
-    font-size: 15px;
-  }
+  .scores-table { width: 100%; max-width: 480px; border-collapse: collapse; margin-bottom: 28px; }
+  .scores-table th { text-align: left; padding: 10px 14px; background: var(--navy); color: var(--mint); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+  .scores-table td { padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 15px; }
   .scores-table tr:first-child td { font-weight: 700; background: #f0fdf4; }
-
-  .debrief-list {
-    width: 100%;
-    max-width: 480px;
-    max-height: 380px;
-    overflow-y: auto;
-    border: 2px solid var(--mint);
-    border-radius: 10px;
-  }
-  .debrief-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #e5e7eb;
-    font-size: 14px;
-  }
+  .debrief-list { width: 100%; max-width: 480px; max-height: 380px; overflow-y: auto; border: 2px solid var(--mint); border-radius: 10px; margin-bottom: 24px; }
+  .debrief-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
   .debrief-item:last-child { border-bottom: none; }
-  .debrief-item .q-text { flex: 1; color: var(--text-mid); }
-  .debrief-badge {
-    background: var(--mint);
-    color: var(--text-dark);
-    font-weight: 800;
-    font-size: 16px;
-    border-radius: 6px;
-    padding: 4px 14px;
-    margin-left: 12px;
-  }
+  .debrief-badge { background: var(--mint); color: var(--text-dark); font-weight: 800; font-size: 16px; border-radius: 6px; padding: 4px 14px; margin-left: 12px; }
 </style>
 </head>
 <body>
 
-
-
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 2: ENTRY — Create or Join
-═══════════════════════════════════════════════════════════ -->
+<!-- ENTRY -->
 <div id="screen-entry" class="screen active">
   <div class="header"><h1>Toka Hāngi</h1></div>
-  <div class="center-wrap" style="flex-direction:column;align-items:center;gap:0;">
-    <button class="entry-create-btn" onclick="createGame()">Create Multiplayer Game</button>
-    <button class="entry-create-btn" onclick="showScreen('solo')" style="background:var(--white);border:2px solid var(--mint);margin-bottom:12px;">Solo Practice</button>
+  <div class="center-wrap">
+    <button class="entry-btn entry-btn-mint" id="btn-create">Create Multiplayer Game</button>
+    <button class="entry-btn entry-btn-outline" id="btn-solo">Solo Practice</button>
     <div class="card">
       <div class="card-label">Join a Game</div>
-      <input class="input-field" id="join-code" placeholder="ENTER 4-DIGIT CODE" maxlength="4"/>
-      <button class="btn-navy" onclick="joinWithCode()">Join <span class="arrow">→</span></button>
+      <input class="input-field" id="join-code" placeholder="ENTER 4-LETTER CODE" maxlength="4"/>
+      <button class="btn-navy" id="btn-join">Join <span class="btn-arrow">→</span></button>
       <div class="error-msg" id="join-error"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN: SOLO — choose question count
-═══════════════════════════════════════════════════════════ -->
+<!-- SOLO -->
 <div id="screen-solo" class="screen">
   <div class="header"><h1><b>Toka Hāngi</b><span>: Solo Practice</span></h1></div>
-  <div class="center-wrap" style="flex-direction:column;align-items:center;">
+  <div class="center-wrap">
     <div style="font-size:17px;font-weight:600;margin-bottom:20px;">How many questions?</div>
-    <button class="solo-option-btn" onclick="startSolo(10)">10 Questions</button>
-    <button class="solo-option-btn" onclick="startSolo(20)">20 Questions</button>
-    <button class="solo-option-btn" onclick="startSolo(50)">50 Questions</button>
-    <button onclick="showScreen('entry')" style="margin-top:8px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;">← Back</button>
+    <button class="solo-btn" id="btn-solo-10">10 Questions</button>
+    <button class="solo-btn" id="btn-solo-20">20 Questions</button>
+    <button class="solo-btn" id="btn-solo-50">50 Questions</button>
+    <button id="btn-solo-back" style="margin-top:8px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;">← Back</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 3: FACILITATOR LOBBY
-═══════════════════════════════════════════════════════════ -->
+<!-- FACILITATOR LOBBY -->
 <div id="screen-facilitator" class="screen">
   <div class="header"><h1><b>Toka Hāngi</b><span>: Facilitator Dashboard</span></h1></div>
-  <div class="center-wrap" style="flex-direction:column;align-items:center;gap:0;">
+  <div class="center-wrap">
     <input class="fac-name-input" id="fac-name" placeholder="ENTER YOUR NAME HERE"/>
     <div class="code-box">
       <div class="code-label">Share this code with your team</div>
@@ -509,33 +134,29 @@
     </div>
     <div class="players-box">
       <h3>Players Joined (<span id="player-count">0</span>)</h3>
-      <div id="player-list-lobby"><span class="waiting">Waiting for teams to join...</span></div>
+      <div id="player-list-lobby"><span style="color:var(--text-muted);font-size:14px;">Waiting for players to join...</span></div>
     </div>
-    <div class="play-btn-wrap">
-      <button class="btn-navy" onclick="startGame()">Play <span class="arrow">→</span></button>
+    <div style="width:100%;max-width:460px;">
+      <button class="btn-navy" id="btn-start">Play <span class="btn-arrow">→</span></button>
       <div class="error-msg" id="fac-error"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 4: PLAYER — Enter name
-═══════════════════════════════════════════════════════════ -->
+<!-- PLAYER JOIN NAME -->
 <div id="screen-player-join" class="screen">
   <div class="header"><h1><b>Toka Hāngi</b><span>: Player Dashboard</span></h1></div>
   <div class="center-wrap">
     <div class="card">
       <div class="card-label">Enter a name</div>
       <input class="input-field" id="player-name-input" placeholder="ENTER NAME HERE"/>
-      <button class="btn-navy" onclick="submitPlayerName()">Join <span class="arrow">→</span></button>
+      <button class="btn-navy" id="btn-submit-name">Join <span class="btn-arrow">→</span></button>
       <div class="error-msg" id="pname-error"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 5: PLAYER — Waiting for game
-═══════════════════════════════════════════════════════════ -->
+<!-- WAITING -->
 <div id="screen-waiting" class="screen">
   <div class="header"><h1><b>Toka Hāngi</b><span>: Player Dashboard</span></h1></div>
   <div class="center-wrap">
@@ -543,542 +164,329 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 6: GAME ARENA (fullscreen)
-═══════════════════════════════════════════════════════════ -->
+<!-- GAME -->
 <div id="screen-game" class="screen">
-  <!-- Background -->
-  <div class="game-bg">
-    <div class="game-bg-fallback"></div>
-  </div>
-
-  <!-- Rock video (holders only) -->
   <div class="rock-video-wrap" id="rock-video-wrap" style="display:none;">
-    <video id="rock-video" autoplay loop muted playsinline>
+    <video id="rock-video" muted playsinline>
       <source src="/assets/rock.mp4" type="video/mp4"/>
     </video>
   </div>
-
-  <!-- Main overlay -->
   <div class="game-overlay">
-    <!-- Exit button -->
     <div style="position:fixed;top:14px;right:16px;z-index:20;">
-      <button onclick="exitGame()" style="background:rgba(13,27,42,0.85);border:1.5px solid #6ee7b7;color:#6ee7b7;border-radius:8px;padding:8px 18px;font-size:14px;font-weight:600;cursor:pointer;">&#x2715; Exit</button>
+      <button id="btn-exit-game" style="background:rgba(13,27,42,0.85);border:1.5px solid #6ee7b7;color:#6ee7b7;border-radius:8px;padding:8px 18px;font-size:14px;font-weight:600;cursor:pointer;">✕ Exit</button>
     </div>
-    <!-- Question -->
-    <div class="question-banner" id="question-text">Te mana _ Kahungunu</div>
-
-    <!-- Timer -->
+    <div id="solo-progress" class="solo-progress" style="display:none;"></div>
+    <div class="question-banner" id="question-text">...</div>
     <div class="timer-wrap">
-      <div class="timer-bar-bg">
-        <div class="timer-bar-fill" id="timer-bar" style="width:100%;"></div>
-      </div>
+      <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%;"></div></div>
       <div class="timer-num" id="timer-num">8</div>
     </div>
-
-    <!-- Answer buttons (holders only) -->
     <div class="answer-buttons" id="answer-buttons" style="display:none;">
-      <button class="answer-btn" id="btn-a" onclick="submitAnswer('a')">a</button>
-      <button class="answer-btn" id="btn-o" onclick="submitAnswer('o')">o</button>
+      <button class="answer-btn" id="btn-a">a</button>
+      <button class="answer-btn" id="btn-o">o</button>
     </div>
-
-    <!-- Status for non-holders -->
-    <div id="watching-msg" style="color:rgba(255,255,255,0.7);font-size:15px;margin-bottom:16px;display:none;">
-      👀 Watch the rock holders answer...
-    </div>
+    <div id="watching-msg" style="color:rgba(255,255,255,0.7);font-size:15px;display:none;">👀 Watch the rock holders answer...</div>
   </div>
-
-  <!-- Player sidebar -->
   <div class="player-sidebar" id="player-sidebar"></div>
-
-  <!-- Round result flash -->
-  <div class="result-flash" id="result-flash">
-    <div class="result-flash-inner" id="result-flash-inner"></div>
+  <div class="result-flash">
+    <div class="result-inner" id="result-inner"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     SCREEN 7: DEBRIEF
-═══════════════════════════════════════════════════════════ -->
+<!-- DEBRIEF -->
 <div id="screen-debrief" class="screen">
   <div class="header"><h1><b>Toka Hāngi</b><span>: Game Over</span></h1></div>
   <div class="center-wrap">
     <div style="width:100%;max-width:480px;">
-      <div class="debrief-header">🏆 Final Scores</div>
-      <table class="scores-table" id="scores-table">
+      <div style="font-size:26px;font-weight:800;margin-bottom:20px;">🏆 Final Scores</div>
+      <table class="scores-table">
         <thead><tr><th>#</th><th>Player</th><th>Score</th></tr></thead>
         <tbody id="scores-body"></tbody>
       </table>
-      <div class="debrief-header" style="font-size:20px;">📋 All Questions</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:12px;">📋 All Questions</div>
       <div class="debrief-list" id="debrief-list"></div>
-      <div style="margin-top:24px;display:flex;gap:12px;">
-        <button onclick="exitGame()" style="flex:1;padding:16px;background:#0d1b2a;color:#6ee7b7;border:2px solid #6ee7b7;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">&#x2190; Home</button>
-        <button onclick="startNewGame()" style="flex:1;padding:16px;background:#6ee7b7;color:#0d1b2a;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">Play Again &#x2192;</button>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <button id="btn-home" style="flex:1;padding:16px;background:#0d1b2a;color:#6ee7b7;border:2px solid #6ee7b7;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">← Home</button>
+        <button id="btn-play-again" style="flex:1;padding:16px;background:#6ee7b7;color:#0d1b2a;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">Play Again →</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════════════
-const STATE = {
-  socket: null,
-  role: null,          // 'facilitator' | 'player'
-  roomCode: null,
-  mySocketId: null,
-  myName: null,
-  pendingCode: null,   // code entered on join screen
-  isHolder: false,
-  answered: false,
-  timerMax: 8,
-  // Solo mode
-  soloMode: false,
-  soloQuestions: [],
-  soloIndex: 0,
-  soloTotal: 0,
-  soloScore: 0,
-  soloAnswered: false,
-  soloTimer: null,
+var S = {
+  socket: null, role: null, roomCode: null, myId: null, myName: null,
+  pendingCode: null, isHolder: false, answered: false, timerMax: 8,
+  soloMode: false, soloQuestions: [], soloIndex: 0, soloTotal: 0,
+  soloScore: 0, soloAnswered: false, soloTimer: null
 };
 
-const ADMIN_PASSWORD = 'hangi2025';
-
-// ═══════════════════════════════════════════════════════
-//  SCREEN MANAGEMENT
-// ═══════════════════════════════════════════════════════
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById('screen-' + id).classList.add('active');
 }
 
-// ═══════════════════════════════════════════════════════
-//  SOCKET INIT
-// ═══════════════════════════════════════════════════════
 function initSocket() {
-  if (STATE.socket) return;
-  STATE.socket = io();
-  STATE.mySocketId = STATE.socket.id;
+  if (S.socket && S.socket.connected) return;
+  S.socket = io();
+  S.socket.on('connect', function() { S.myId = S.socket.id; });
 
-  STATE.socket.on('connect', () => {
-    STATE.mySocketId = STATE.socket.id;
+  S.socket.on('player_joined', function(d) { updateLobby(d.players); });
+  S.socket.on('player_left',   function(d) { updateLobby(d.players); });
+
+  S.socket.on('game_starting', function(d) {
+    show('game');
+    updateSidebar(d.players, []);
   });
 
-  STATE.socket.on('player_joined', ({ players }) => {
-    updateLobbyPlayers(players);
-  });
-
-  STATE.socket.on('player_left', ({ players }) => {
-    updateLobbyPlayers(players);
-  });
-
-  STATE.socket.on('game_starting', ({ players }) => {
-    // Both facilitator and players transition to game screen
-    showScreen('game');
-    updateSidebar(players, []);
-  });
-
-  STATE.socket.on('round_start', ({ question, rockHolders, players, duration }) => {
-    STATE.answered = false;
-    STATE.isHolder = rockHolders.includes(STATE.mySocketId);
-
-    document.getElementById('question-text').textContent = question;
+  S.socket.on('round_start', function(d) {
+    S.answered = false;
+    S.isHolder = d.rockHolders.indexOf(S.myId) !== -1;
+    document.getElementById('question-text').textContent = d.question;
     document.getElementById('timer-bar').style.width = '100%';
-    document.getElementById('timer-num').textContent = STATE.timerMax;
-
-    // Reset answer buttons
-    document.getElementById('btn-a').className = 'answer-btn';
-    document.getElementById('btn-o').className = 'answer-btn';
-    document.getElementById('btn-a').disabled = false;
-    document.getElementById('btn-o').disabled = false;
-
-    // Always reset and stop video first regardless of holder status
-    const vid = document.getElementById('rock-video');
-    vid.pause();
-    vid.currentTime = 0;
+    document.getElementById('timer-num').textContent = S.timerMax;
+    resetBtns();
+    var vid = document.getElementById('rock-video');
+    vid.pause(); vid.currentTime = 0;
     document.getElementById('rock-video-wrap').style.display = 'none';
-
-    if (STATE.isHolder) {
+    if (S.isHolder) {
       document.getElementById('answer-buttons').style.display = 'flex';
       document.getElementById('watching-msg').style.display = 'none';
-      // Now start fresh for this holder
       vid.play();
       document.getElementById('rock-video-wrap').style.display = 'flex';
     } else {
       document.getElementById('answer-buttons').style.display = 'none';
-      document.getElementById('watching-msg').style.display = 'none';
+      document.getElementById('watching-msg').style.display = 'block';
     }
-
-    updateSidebar(players, rockHolders);
+    updateSidebar(d.players, d.rockHolders);
   });
 
-  STATE.socket.on('timer_tick', ({ secondsLeft }) => {
-    document.getElementById('timer-num').textContent = secondsLeft;
-    const pct = (secondsLeft / STATE.timerMax) * 100;
-    document.getElementById('timer-bar').style.width = pct + '%';
+  S.socket.on('timer_tick', function(d) {
+    document.getElementById('timer-num').textContent = d.secondsLeft;
+    document.getElementById('timer-bar').style.width = (d.secondsLeft / S.timerMax * 100) + '%';
   });
 
-  STATE.socket.on('answer_received', ({ socketId, result }) => {
-    if (socketId === STATE.mySocketId) {
-      const correct = result === 'correct';
-      document.getElementById('btn-' + (correct ? 'o' : 'a')); // visual handled by submit
-    }
-  });
-
-  STATE.socket.on('round_result', ({ correct, results, players }) => {
-    showResultFlash(correct, results);
+  S.socket.on('round_result', function(d) {
     document.getElementById('rock-video-wrap').style.display = 'none';
-    updateSidebar(players, []);
-    // disable buttons
     document.getElementById('answer-buttons').style.display = 'none';
     document.getElementById('watching-msg').style.display = 'none';
+    updateSidebar(d.players, []);
+    var mine = null;
+    for (var i = 0; i < d.results.length; i++) {
+      if (d.results[i].socketId === S.myId) { mine = d.results[i]; break; }
+    }
+    showFlash(d.correct, mine ? mine.result : null);
   });
 
-  STATE.socket.on('game_over', ({ players, debrief }) => {
-    showScreen('debrief');
-    buildDebrief(players, debrief);
+  S.socket.on('game_over', function(d) {
+    buildDebrief(d.players, d.debrief);
+    show('debrief');
   });
 
-  STATE.socket.on('room_closed', ({ reason }) => {
-    alert('Room closed: ' + reason);
-    showScreen('entry');
-  });
+  S.socket.on('room_closed', function() { exitToHome(); });
 }
 
-// ═══════════════════════════════════════════════════════
-//  SCREEN 1 — PASSWORD
-// ═══════════════════════════════════════════════════════
-
-
-// ═══════════════════════════════════════════════════════
-//  SCREEN 2 — ENTRY
-// ═══════════════════════════════════════════════════════
-function createGame() {
+// ENTRY
+document.getElementById('btn-create').onclick = function() {
   initSocket();
-  STATE.role = 'facilitator';
-  STATE.socket.emit('create_room', { password: ADMIN_PASSWORD }, (res) => {
+  S.role = 'facilitator';
+  S.socket.emit('create_room', { password: 'hangi2025' }, function(res) {
     if (res.error) { alert(res.error); return; }
-    STATE.roomCode = res.code;
+    S.roomCode = res.code;
     document.getElementById('room-code-display').textContent = res.code.split('').join(' ');
-    showScreen('facilitator');
+    show('facilitator');
   });
-}
+};
 
-function joinWithCode() {
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (code.length !== 4) {
-    document.getElementById('join-error').textContent = 'Please enter a 4-letter code.';
-    return;
-  }
-  STATE.pendingCode = code;
-  STATE.role = 'player';
-  showScreen('player-join');
-}
+document.getElementById('btn-solo').onclick = function() { show('solo'); };
 
-// ═══════════════════════════════════════════════════════
-//  SCREEN 3 — FACILITATOR LOBBY
-// ═══════════════════════════════════════════════════════
-function updateLobbyPlayers(players) {
-  const list = document.getElementById('player-list-lobby');
-  const count = document.getElementById('player-count');
-  count.textContent = players.length;
-  if (players.length === 0) {
-    list.innerHTML = '<span class="waiting">Waiting for teams to join...</span>';
-  } else {
-    list.innerHTML = players.map(p =>
-      `<span class="player-pill">${p.name}</span>`
-    ).join('');
-  }
-}
+document.getElementById('btn-join').onclick = function() {
+  var code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length !== 4) { document.getElementById('join-error').textContent = 'Please enter a 4-letter code.'; return; }
+  S.pendingCode = code;
+  S.role = 'player';
+  show('player-join');
+};
 
-function startGame() {
-  const err = document.getElementById('fac-error');
-  STATE.socket.emit('start_game', {}, (res) => {
-    if (res?.error) { err.textContent = res.error; return; }
-    err.textContent = '';
-  });
-}
-
-// ═══════════════════════════════════════════════════════
-//  SCREEN 4 — PLAYER JOIN NAME
-// ═══════════════════════════════════════════════════════
-function submitPlayerName() {
-  const name = document.getElementById('player-name-input').value.trim();
-  const err  = document.getElementById('pname-error');
-  if (!name) { err.textContent = 'Please enter a name.'; return; }
-
-  initSocket();
-  STATE.myName = name;
-
-  STATE.socket.emit('join_room', {
-    code: STATE.pendingCode,
-    name,
-    password: ADMIN_PASSWORD,
-  }, (res) => {
-    if (!res.ok) { err.textContent = res.error; return; }
-    err.textContent = '';
-    showScreen('waiting');
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const nameInput = document.getElementById('player-name-input');
-  if (nameInput) nameInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') submitPlayerName();
-  });
+document.getElementById('join-code').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('btn-join').click();
 });
 
-// ═══════════════════════════════════════════════════════
-//  SCREEN 6 — GAME
-// ═══════════════════════════════════════════════════════
-function updateSidebar(players, rockHolders) {
-  const sidebar = document.getElementById('player-sidebar');
-  sidebar.innerHTML = players.map(p => {
-    const isHolder = rockHolders.includes(p.id);
-    return `<div class="sidebar-player ${isHolder ? 'is-holder' : ''}">
-      ${p.name} <span style="font-size:12px;color:#6b7280;">${p.score > 0 ? '+' : ''}${p.score}</span>
-    </div>`;
-  }).join('');
+// SOLO
+document.getElementById('btn-solo-back').onclick = function() { show('entry'); };
+document.getElementById('btn-solo-10').onclick   = function() { startSolo(10); };
+document.getElementById('btn-solo-20').onclick   = function() { startSolo(20); };
+document.getElementById('btn-solo-50').onclick   = function() { startSolo(50); };
+
+function startSolo(count) {
+  S.soloMode = true; S.soloTotal = count; S.soloScore = 0; S.soloIndex = 0;
+  fetch('/questions.json').then(function(r) { return r.json(); }).then(function(all) {
+    S.soloQuestions = all.sort(function() { return Math.random() - 0.5; }).slice(0, count);
+    document.getElementById('player-sidebar').style.display = 'none';
+    show('game');
+    soloNext();
+  });
 }
 
-function submitAnswer(answer) {
-  // Route to solo handler if in solo mode
-  if (STATE.soloMode) {
-    soloHandleAnswer(answer);
-    return;
-  }
-  if (STATE.answered || !STATE.isHolder) return;
-  STATE.answered = true;
-  STATE.socket.emit('submit_answer', { answer });
-
-  // Visual feedback immediately
-  document.getElementById('btn-a').disabled = true;
-  document.getElementById('btn-o').disabled = true;
-}
-
-function showResultFlash(correctAnswer, results) {
-  const inner = document.getElementById('result-flash-inner');
-
-  // Did I get it right?
-  const myResult = results.find(r => r.socketId === STATE.mySocketId);
-
-  let html = '';
-  if (myResult) {
-    if (myResult.result === 'correct') {
-      html = `<div class="rf-correct">✓ Correct! +1</div>`;
-    } else if (myResult.result === 'timeout') {
-      html = `<div class="rf-wrong">⏱ Time's up! -1</div>`;
-    } else {
-      html = `<div class="rf-wrong">✗ Wrong! -1</div>`;
-    }
-  }
-  html += `<div class="rf-answer">Answer: <b>${correctAnswer}</b></div>`;
-  inner.innerHTML = html;
-  inner.classList.add('show');
-  setTimeout(() => inner.classList.remove('show'), 2000);
-}
-
-// ═══════════════════════════════════════════════════════
-//  SCREEN 7 — DEBRIEF
-// ═══════════════════════════════════════════════════════
-function buildDebrief(players, debrief) {
-  const tbody = document.getElementById('scores-body');
-  tbody.innerHTML = players.map((p, i) =>
-    `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.score}</td></tr>`
-  ).join('');
-
-  const list = document.getElementById('debrief-list');
-  list.innerHTML = debrief.map(q =>
-    `<div class="debrief-item">
-      <span class="q-text">${q.question}</span>
-      <span class="debrief-badge">${q.correct}</span>
-    </div>`
-  ).join('');
-}
-// ═══════════════════════════════════════════════════════
-//  SOLO MODE
-// ═══════════════════════════════════════════════════════
-const ALL_QUESTIONS = null; // loaded via fetch below
-
-async function startSolo(count) {
-  STATE.soloMode = true;
-  STATE.soloTotal = count;
-  STATE.soloScore = 0;
-  STATE.soloIndex = 0;
-
-  // Fetch questions from server
-  const res = await fetch('/questions.json');
-  const all = await res.json();
-
-  // Shuffle and take requested count
-  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, count);
-  STATE.soloQuestions = shuffled;
-
-  showScreen('game');
-  // Hide multiplayer sidebar
-  document.getElementById('player-sidebar').style.display = 'none';
-  soloNextQuestion();
-}
-
-function soloNextQuestion() {
-  if (STATE.soloIndex >= STATE.soloTotal) {
-    return soloEndGame();
-  }
-
-  STATE.soloAnswered = false;
-  const q = STATE.soloQuestions[STATE.soloIndex];
-
+function soloNext() {
+  if (S.soloIndex >= S.soloTotal) { soloEnd(); return; }
+  S.soloAnswered = false;
+  var q = S.soloQuestions[S.soloIndex];
   document.getElementById('question-text').textContent = q.question;
   document.getElementById('timer-bar').style.width = '100%';
-  document.getElementById('timer-num').textContent = STATE.timerMax;
-  document.getElementById('btn-a').className = 'answer-btn';
-  document.getElementById('btn-o').className = 'answer-btn';
-  document.getElementById('btn-a').disabled = false;
-  document.getElementById('btn-o').disabled = false;
+  document.getElementById('timer-num').textContent = S.timerMax;
+  resetBtns();
   document.getElementById('answer-buttons').style.display = 'flex';
   document.getElementById('watching-msg').style.display = 'none';
-
-  // Show progress
-  let prog = document.getElementById('solo-progress');
-  if (!prog) {
-    prog = document.createElement('div');
-    prog.id = 'solo-progress';
-    prog.className = 'solo-progress';
-    document.querySelector('.game-overlay').insertBefore(prog, document.getElementById('question-text'));
-  }
-  prog.textContent = 'Question ' + (STATE.soloIndex + 1) + ' of ' + STATE.soloTotal + '  |  Score: ' + STATE.soloScore;
-
-  // Reset video
-  const vid = document.getElementById('rock-video');
-  vid.pause();
-  vid.currentTime = 0;
-  vid.play();
+  var prog = document.getElementById('solo-progress');
+  prog.style.display = 'block';
+  prog.textContent = 'Question ' + (S.soloIndex + 1) + ' of ' + S.soloTotal + '   Score: ' + S.soloScore;
+  var vid = document.getElementById('rock-video');
+  vid.pause(); vid.currentTime = 0; vid.play();
   document.getElementById('rock-video-wrap').style.display = 'flex';
-
-  // Start timer
-  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
-  let secondsLeft = STATE.timerMax;
-  STATE.soloTimer = setInterval(() => {
-    secondsLeft--;
-    document.getElementById('timer-num').textContent = secondsLeft;
-    const pct = (secondsLeft / STATE.timerMax) * 100;
-    document.getElementById('timer-bar').style.width = pct + '%';
-    if (secondsLeft <= 0) {
-      clearInterval(STATE.soloTimer);
-      soloHandleTimeout();
-    }
+  if (S.soloTimer) clearInterval(S.soloTimer);
+  var secs = S.timerMax;
+  S.soloTimer = setInterval(function() {
+    secs--;
+    document.getElementById('timer-num').textContent = secs;
+    document.getElementById('timer-bar').style.width = (secs / S.timerMax * 100) + '%';
+    if (secs <= 0) { clearInterval(S.soloTimer); soloTimeout(); }
   }, 1000);
 }
 
-function soloHandleAnswer(answer) {
-  if (STATE.soloAnswered || !STATE.soloMode) return;
-  STATE.soloAnswered = true;
-  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
-
-  const q = STATE.soloQuestions[STATE.soloIndex];
-  const correct = answer === q.correct;
-  if (correct) {
-    STATE.soloScore++;
-    document.getElementById('btn-' + answer).className = 'answer-btn selected-correct';
-  } else {
-    STATE.soloScore--;
-    document.getElementById('btn-' + answer).className = 'answer-btn selected-wrong';
-  }
+function soloAnswer(answer) {
+  if (S.soloAnswered) return;
+  S.soloAnswered = true;
+  if (S.soloTimer) clearInterval(S.soloTimer);
+  var q = S.soloQuestions[S.soloIndex];
+  var ok = answer === q.correct;
+  if (ok) { S.soloScore++; document.getElementById('btn-' + answer).className = 'answer-btn correct'; }
+  else    { S.soloScore--; document.getElementById('btn-' + answer).className = 'answer-btn wrong'; }
   document.getElementById('btn-a').disabled = true;
   document.getElementById('btn-o').disabled = true;
-
-  // Show flash then next question
-  const inner = document.getElementById('result-flash-inner');
-  inner.innerHTML = correct
-    ? '<div class="rf-correct">✓ Correct! +1</div><div class="rf-answer">Answer: <b>' + q.correct + '</b></div>'
-    : '<div class="rf-wrong">✗ Wrong! -1</div><div class="rf-answer">Answer: <b>' + q.correct + '</b></div>';
-  inner.classList.add('show');
-
-  setTimeout(() => {
-    inner.classList.remove('show');
-    STATE.soloIndex++;
-    soloNextQuestion();
-  }, 1500);
+  showFlash(q.correct, ok ? 'correct' : 'incorrect');
+  setTimeout(function() { S.soloIndex++; soloNext(); }, 1500);
 }
 
-function soloHandleTimeout() {
-  if (STATE.soloAnswered) return;
-  STATE.soloAnswered = true;
-  STATE.soloScore--;
-
-  const q = STATE.soloQuestions[STATE.soloIndex];
-  const inner = document.getElementById('result-flash-inner');
-  inner.innerHTML = '<div class="rf-wrong">⏱ Time's up! -1</div><div class="rf-answer">Answer: <b>' + q.correct + '</b></div>';
-  inner.classList.add('show');
-
-  setTimeout(() => {
-    inner.classList.remove('show');
-    STATE.soloIndex++;
-    soloNextQuestion();
-  }, 1500);
+function soloTimeout() {
+  if (S.soloAnswered) return;
+  S.soloAnswered = true; S.soloScore--;
+  showFlash(S.soloQuestions[S.soloIndex].correct, 'timeout');
+  setTimeout(function() { S.soloIndex++; soloNext(); }, 1500);
 }
 
-function soloEndGame() {
-  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
+function soloEnd() {
+  if (S.soloTimer) clearInterval(S.soloTimer);
   document.getElementById('rock-video-wrap').style.display = 'none';
+  document.getElementById('solo-progress').style.display = 'none';
   document.getElementById('player-sidebar').style.display = '';
-
-  // Remove progress indicator
-  const prog = document.getElementById('solo-progress');
-  if (prog) prog.remove();
-
-  // Build solo debrief
-  showScreen('debrief');
-  const tbody = document.getElementById('scores-body');
-  tbody.innerHTML = '<tr><td>1</td><td>You</td><td>' + STATE.soloScore + '</td></tr>';
-
-  const list = document.getElementById('debrief-list');
-  list.innerHTML = STATE.soloQuestions.map(q =>
-    '<div class="debrief-item"><span class="q-text">' + q.question + '</span><span class="debrief-badge">' + q.correct + '</span></div>'
-  ).join('');
-
-  STATE.soloMode = false;
+  buildDebrief([{ name: 'You', score: S.soloScore }], S.soloQuestions);
+  S.soloMode = false;
+  show('debrief');
 }
 
-function exitGame() {
-  if (STATE.soloTimer) clearInterval(STATE.soloTimer);
-  STATE.soloMode = false;
-  const prog = document.getElementById('solo-progress');
-  if (prog) prog.remove();
+// FACILITATOR LOBBY
+function updateLobby(players) {
+  document.getElementById('player-count').textContent = players.length;
+  var list = document.getElementById('player-list-lobby');
+  if (!players.length) {
+    list.innerHTML = '<span style="color:var(--text-muted);font-size:14px;">Waiting for players to join...</span>';
+  } else {
+    list.innerHTML = players.map(function(p) { return '<span class="player-pill">' + p.name + '</span>'; }).join('');
+  }
+}
+
+document.getElementById('btn-start').onclick = function() {
+  S.socket.emit('start_game', {}, function(res) {
+    if (res && res.error) document.getElementById('fac-error').textContent = res.error;
+  });
+};
+
+// PLAYER JOIN
+document.getElementById('btn-submit-name').onclick = function() {
+  var name = document.getElementById('player-name-input').value.trim();
+  if (!name) { document.getElementById('pname-error').textContent = 'Please enter a name.'; return; }
+  initSocket();
+  S.myName = name;
+  S.socket.emit('join_room', { code: S.pendingCode, name: name, password: 'hangi2025' }, function(res) {
+    if (!res.ok) { document.getElementById('pname-error').textContent = res.error; return; }
+    show('waiting');
+  });
+};
+
+document.getElementById('player-name-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('btn-submit-name').click();
+});
+
+// GAME BUTTONS
+document.getElementById('btn-a').onclick = function() {
+  if (S.soloMode) { soloAnswer('a'); return; }
+  if (S.answered || !S.isHolder) return;
+  S.answered = true;
+  S.socket.emit('submit_answer', { answer: 'a' });
+  document.getElementById('btn-a').disabled = true;
+  document.getElementById('btn-o').disabled = true;
+};
+document.getElementById('btn-o').onclick = function() {
+  if (S.soloMode) { soloAnswer('o'); return; }
+  if (S.answered || !S.isHolder) return;
+  S.answered = true;
+  S.socket.emit('submit_answer', { answer: 'o' });
+  document.getElementById('btn-a').disabled = true;
+  document.getElementById('btn-o').disabled = true;
+};
+document.getElementById('btn-exit-game').onclick = function() { exitToHome(); };
+
+function updateSidebar(players, holders) {
+  document.getElementById('player-sidebar').innerHTML = players.map(function(p) {
+    var h = holders.indexOf(p.id) !== -1;
+    return '<div class="sidebar-player' + (h ? ' holder' : '') + '">' + p.name +
+      ' <span style="font-size:12px;color:#6b7280;">' + (p.score > 0 ? '+' : '') + p.score + '</span></div>';
+  }).join('');
+}
+
+function resetBtns() {
+  var a = document.getElementById('btn-a'), o = document.getElementById('btn-o');
+  a.className = 'answer-btn'; a.disabled = false;
+  o.className = 'answer-btn'; o.disabled = false;
+}
+
+function showFlash(correct, result) {
+  var inner = document.getElementById('result-inner');
+  var html = '';
+  if (result === 'correct')    html += '<div class="rf-correct">✓ Correct! +1</div>';
+  else if (result === 'timeout')  html += '<div class="rf-wrong">⏱ Time\'s up! -1</div>';
+  else if (result === 'incorrect') html += '<div class="rf-wrong">✗ Wrong! -1</div>';
+  html += '<div class="rf-answer">Answer: <b>' + correct + '</b></div>';
+  inner.innerHTML = html;
+  inner.classList.add('show');
+  setTimeout(function() { inner.classList.remove('show'); }, 1800);
+}
+
+// DEBRIEF
+function buildDebrief(players, questions) {
+  document.getElementById('scores-body').innerHTML = players.map(function(p, i) {
+    return '<tr><td>' + (i+1) + '</td><td>' + p.name + '</td><td>' + p.score + '</td></tr>';
+  }).join('');
+  document.getElementById('debrief-list').innerHTML = questions.map(function(q) {
+    return '<div class="debrief-item"><span style="flex:1;color:var(--text-mid);">' + q.question + '</span><span class="debrief-badge">' + q.correct + '</span></div>';
+  }).join('');
+}
+
+document.getElementById('btn-home').onclick       = function() { exitToHome(); };
+document.getElementById('btn-play-again').onclick = function() { exitToHome(); };
+
+function exitToHome() {
+  if (S.soloTimer) clearInterval(S.soloTimer);
+  S.soloMode = false;
+  document.getElementById('solo-progress').style.display = 'none';
   document.getElementById('player-sidebar').style.display = '';
-  if (STATE.socket) {
-    STATE.socket.disconnect();
-    STATE.socket = null;
-  }
-  // Reset all state
-  STATE.role = null;
-  STATE.roomCode = null;
-  STATE.mySocketId = null;
-  STATE.myName = null;
-  STATE.pendingCode = null;
-  STATE.isHolder = false;
-  STATE.answered = false;
-  // Hide rock video
   document.getElementById('rock-video-wrap').style.display = 'none';
-  showScreen('entry');
-}
-
-function startNewGame() {
-  if (STATE.socket) {
-    STATE.socket.disconnect();
-    STATE.socket = null;
-  }
-  STATE.role = null;
-  STATE.roomCode = null;
-  STATE.mySocketId = null;
-  STATE.myName = null;
-  STATE.pendingCode = null;
-  STATE.isHolder = false;
-  STATE.answered = false;
-  document.getElementById('rock-video-wrap').style.display = 'none';
-  // Go straight to create a new game as facilitator
-  showScreen('entry');
+  if (S.socket) { S.socket.disconnect(); S.socket = null; }
+  S.role = null; S.roomCode = null; S.myId = null; S.myName = null;
+  S.pendingCode = null; S.isHolder = false; S.answered = false;
+  S.soloIndex = 0; S.soloScore = 0;
+  show('entry');
 }
 </script>
 </body>
